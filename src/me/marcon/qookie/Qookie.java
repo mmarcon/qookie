@@ -47,6 +47,7 @@ public class Qookie<M extends Serializable, T> {
     private List<M> queue;
     private Channel<T> channel;
     private Serializer<M, T> serializer;
+    private QookieAction<M> qookieAction;
     private int numberLimit;
     private int byteLimit;
 
@@ -74,6 +75,20 @@ public class Qookie<M extends Serializable, T> {
             queue.clear();
         }
         return result;
+    }
+    
+    public void pause() {
+        if(qookieAction != null) {
+            qookieAction.freeze(queue);
+        }
+    }
+    
+    public void resume(List<M> frozenQueue) {
+        this.queue.addAll(frozenQueue);
+    }
+    
+    public void setQookieAction(QookieAction<M> qookieAction) {
+        this.qookieAction = qookieAction;
     }
 
     public int getNumberLimit() {
