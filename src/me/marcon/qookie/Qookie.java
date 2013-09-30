@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,7 +48,6 @@ public class Qookie<M extends Serializable, T> {
     private List<M> queue;
     private Channel<T> channel;
     private Serializer<M, T> serializer;
-    private QookieAction<M> qookieAction;
     private int numberLimit;
     private int byteLimit;
 
@@ -77,18 +77,42 @@ public class Qookie<M extends Serializable, T> {
         return result;
     }
     
-    public void pause() {
-        if(qookieAction != null) {
-            qookieAction.freeze(queue);
-        }
+    /**
+     * Pauses the Qookie queue.
+     * This is typically used when the application is
+     * going to be terminated Ð or paused and the state
+     * of the queue needs to be frozen and dumped somewhere
+     * so it can be restored later.
+     * 
+     * <b>Note that when <code>Qookie.pause()</code> is invoked
+     * the frozen queue is returned and the original queue is
+     * emptied.</b>
+     * 
+     * Since Qookie was primarily designed for Android mobile
+     * applications and ArrayList is returned. As long as
+     * <code>M</code> is a Parcelable
+     * ({@see http://developer.android.com/reference/android/os/Parcelable.html})
+     * the frozen list can be added to a
+     * Bundle ({@see http://developer.android.com/reference/android/os/Bundle.html})
+     * that can store the state of the application.
+     * 
+     * @return an ArrayList<M> containing the frozen queue.
+     */
+    public ArrayList<M> pause() {
+        ArrayList<M> frozenQueue = new ArrayList<M>();
+        frozenQueue.addAll(queue);
+        queue.clear();
+        return frozenQueue;
     }
     
-    public void resume(List<M> frozenQueue) {
+    /**
+     * Restores the state of a previously frozen (or paused) Qookie queue.
+     * {@link Qookie#pause()}
+     * 
+     * @param frozenQueue a queue that was previously frozen.
+     */
+    public void resume(ArrayList<M> frozenQueue) {
         this.queue.addAll(frozenQueue);
-    }
-    
-    public void setQookieAction(QookieAction<M> qookieAction) {
-        this.qookieAction = qookieAction;
     }
 
     public int getNumberLimit() {
